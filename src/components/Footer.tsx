@@ -11,7 +11,9 @@ export function Footer() {
       <div className={styles.footerRight}>
         Music infrastructure by{' '}
         <a href="https://audius.co" target="_blank" rel="noreferrer">Audius</a>
-        {' '}&amp; Open Audio Protocol &nbsp;&middot;&nbsp; &copy; 2026
+        {' '}&amp;{' '}
+        <a href="https://openaudio.org" target="_blank" rel="noopener noreferrer">Open Audio Protocol</a>
+        &nbsp;&middot;&nbsp; &copy; 2026
       </div>
     </footer>
   )

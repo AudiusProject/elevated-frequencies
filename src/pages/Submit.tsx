@@ -194,7 +194,7 @@ export function Submit() {
     return (
       <div className={styles.successOverlay}>
         <div className={styles.successBox}>
-          <div className={styles.successCheck}>&check;</div>
+          <div className={styles.successCheck}>{'\u2713'}</div>
           <h2>Track Submitted</h2>
           <p>
             Your track is in the crate. Olivia will personally review it. If it has the energy,
@@ -246,7 +246,7 @@ export function Submit() {
             <strong>{user.name}</strong>
             <span>@{user.handle} on Audius</span>
           </div>
-          <div className={styles.connectedTag}>&check; Connected</div>
+          <div className={styles.connectedTag}>{'\u2713'} Connected</div>
         </div>
 
         <form onSubmit={handleSubmit}>

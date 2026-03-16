@@ -1,14 +1,17 @@
 import { useAuthStore, type Submission, type SubmissionStatus } from './store'
+import { isCuratorApp, getCuratorKey } from './curator'
 
 const BASE = '/api'
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = useAuthStore.getState().accessToken
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
   }
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
+  if (isCuratorApp() && getCuratorKey()) {
+    headers['X-Curator-Key'] = getCuratorKey()
+  } else {
+    const token = useAuthStore.getState().accessToken
+    if (token) headers['Authorization'] = `Bearer ${token}`
   }
   if (!(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json'
@@ -27,13 +30,22 @@ export interface CreateSubmissionPayload {
   artistName: string
   genre: string
   bpm: string
-  moods: string[]
   description: string
   releaseStatus: string
   location: string
   instagram: string
   tiktok: string
   spotifyUrl: string
+}
+
+export interface Comment {
+  id: string
+  submissionId: number
+  userId: string
+  userHandle: string
+  userName: string
+  body: string
+  createdAt: string
 }
 
 export const api = {
@@ -69,4 +81,21 @@ export const api = {
       body: JSON.stringify({ audiusUserId, accessToken }),
     }),
 
+  getComments: (submissionId: number) =>
+    request<{ comments: Comment[] }>(`/submissions/${submissionId}/comments`),
+
+  postComment: (
+    submissionId: number,
+    body: string,
+    opts?: { userHandle?: string; userName?: string; curatorName?: string }
+  ) =>
+    request<{ comment: Comment }>(`/submissions/${submissionId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({
+        body,
+        userHandle: opts?.userHandle ?? '',
+        userName: opts?.userName ?? '',
+        curatorName: opts?.curatorName ?? '',
+      }),
+    }),
 }

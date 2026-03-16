@@ -6,20 +6,12 @@ import { getAudiusSdk } from '@/lib/audius'
 import { api, type CreateSubmissionPayload } from '@/lib/api'
 import styles from './Submit.module.css'
 
-const MOODS = [
-  'Peaceful', 'Romantic', 'Sentimental', 'Tender', 'Easygoing',
-  'Yearning', 'Sophisticated', 'Sensual', 'Cool', 'Gritty',
-  'Melancholy', 'Serious', 'Brooding', 'Fiery', 'Defiant',
-  'Aggressive', 'Rowdy', 'Excited', 'Energizing', 'Empowering',
-  'Stirring', 'Upbeat', 'Other',
-]
-
 const GENRES = [
-  'Electronic', 'House', 'Techno', 'Tech House', 'Deep House',
-  'Ambient', 'Hip-Hop/Rap', 'R&B/Soul', 'Pop', 'Rock',
-  'Experimental', 'Drum & Bass', 'Trance', 'Trap', 'Disco',
-  'Funk', 'Lo-Fi', 'Downtempo', 'Future Bass', 'Jungle',
-  'Folk', 'Alternative', 'Jazz', 'Classical', 'Latin',
+  'Electronic',
+  'House',
+  'Techno',
+  'Tech House',
+  'Deep House',
 ]
 
 export function Submit() {
@@ -34,7 +26,6 @@ export function Submit() {
   const [coverArtPreview, setCoverArtPreview] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [selectedMoods, setSelectedMoods] = useState<string[]>([])
   const [charCount, setCharCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<{ trackTitle: string; artistName: string } | null>(null)
@@ -67,12 +58,6 @@ export function Submit() {
           Sign In with Audius &nbsp;&rarr;
         </button>
       </section>
-    )
-  }
-
-  const toggleMood = (mood: string) => {
-    setSelectedMoods((prev) =>
-      prev.includes(mood) ? prev.filter((m) => m !== mood) : [...prev, mood]
     )
   }
 
@@ -141,7 +126,6 @@ export function Submit() {
         form.instagram ? `Instagram: @${form.instagram}` : '',
         form.tiktok ? `TikTok: @${form.tiktok}` : '',
         form.spotifyUrl ? `Spotify: ${form.spotifyUrl}` : '',
-        selectedMoods.length > 0 ? `Mood: ${selectedMoods.join(', ')}` : '',
         form.bpm ? `BPM: ${form.bpm}` : '',
         form.releaseStatus ? `Release Status: ${form.releaseStatus}` : '',
       ].filter(Boolean).join('\n')
@@ -176,7 +160,7 @@ export function Submit() {
           title: `[EF Submission] ${form.trackTitle}`,
           genre: form.genre as import('@audius/sdk').Genre,
           description: descriptionWithContext,
-          mood: (selectedMoods[0] as import('@audius/sdk').Mood) ?? undefined,
+          mood: undefined,
           tags: 'elevated-frequencies,submission',
           isUnlisted: true,
           bpm: form.bpm ? Number(form.bpm) : undefined,
@@ -199,7 +183,6 @@ export function Submit() {
         artistName: form.artistName || user.name,
         genre: form.genre,
         bpm: form.bpm,
-        moods: selectedMoods,
         description: form.description,
         releaseStatus: form.releaseStatus,
         location: form.location,
@@ -211,7 +194,7 @@ export function Submit() {
       await api.createSubmission({
         ...payload,
         audiusHandle: user.handle,
-      } as any)
+      })
 
       setSuccess({ trackTitle: form.trackTitle, artistName: form.artistName || user.name })
     } catch (err: any) {
@@ -248,7 +231,6 @@ export function Submit() {
               setCoverArt(null)
               setCoverArtPreview(null)
               setForm({ trackTitle: '', artistName: user?.name ?? '', genre: '', bpm: '', description: '', releaseStatus: '', location: '', instagram: '', tiktok: '', spotifyUrl: '' })
-              setSelectedMoods([])
               setChecks({ original: false, liveOnAudius: false })
               setCharCount(0)
             }}>
@@ -450,22 +432,6 @@ export function Submit() {
                 <option key={g} value={g}>{g}</option>
               ))}
             </select>
-          </div>
-
-          <div className="field-group">
-            <label>Mood / Vibe</label>
-            <div className="mood-tags">
-              {MOODS.map((mood) => (
-                <button
-                  key={mood}
-                  type="button"
-                  className={`mtag ${selectedMoods.includes(mood) ? 'on' : ''}`}
-                  onClick={() => toggleMood(mood)}
-                >
-                  {mood}
-                </button>
-              ))}
-            </div>
           </div>
 
           <div className="field-group">

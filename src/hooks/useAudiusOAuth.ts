@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useAuthStore } from '@/lib/store'
 import { getAudiusSdk } from '@/lib/audius'
 
-const ARTIST_USER_ID = import.meta.env.VITE_ARTIST_USER_ID ?? ''
+const ARTIST_USER_ID = (import.meta.env.VITE_ARTIST_USER_ID ?? '').trim()
 
 export function useAudiusOAuth() {
   const [loading, setLoading] = useState(false)
@@ -22,7 +22,8 @@ export function useAudiusOAuth() {
       audiusSdk.oauth.init({
         successCallback: (profile: any, encodedJwt: string) => {
           const userId = profile.userId ?? ''
-          const isArtist = ARTIST_USER_ID !== '' && String(userId) === String(ARTIST_USER_ID)
+          const isArtist =
+            ARTIST_USER_ID !== '' && String(userId) === String(ARTIST_USER_ID)
 
           setAuth(
             {

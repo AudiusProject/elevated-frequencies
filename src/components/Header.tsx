@@ -14,7 +14,10 @@ export function Header() {
 
   return (
     <header className={styles.header}>
-      <Link to="/" className={styles.logoLockup}>
+      <Link
+        to={user?.isArtist ? '/dashboard' : '/'}
+        className={styles.logoLockup}
+      >
         <Logo size={50} />
         <div className={styles.logoType}>
           <span className={styles.l1}>Elevated</span>
@@ -28,9 +31,12 @@ export function Header() {
             <nav className={styles.nav}>
               {user.isArtist ? (
                 <Link to="/dashboard" className={styles.navLink}>Dashboard</Link>
-              ) : null}
-              <Link to="/my-submissions" className={styles.navLink}>My Submissions</Link>
-              <Link to="/submit" className={styles.navLink}>Submit</Link>
+              ) : (
+                <>
+                  <Link to="/my-submissions" className={styles.navLink}>My Submissions</Link>
+                  <Link to="/submit" className={styles.navLink}>Submit</Link>
+                </>
+              )}
             </nav>
             <div className={styles.userInfo}>
               <span className={styles.handle}>@{user.handle}</span>

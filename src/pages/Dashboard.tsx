@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore, type Submission, type SubmissionStatus } from '@/lib/store'
+import { isCuratorApp } from '@/lib/curator'
 import { api } from '@/lib/api'
 import { StatusBadge } from '@/components/StatusBadge'
 import { PlayButton } from '@/components/PlayButton'
@@ -8,11 +9,9 @@ import styles from './Dashboard.module.css'
 
 const STATUS_FILTERS: { value: string; label: string }[] = [
   { value: 'all', label: 'All' },
-  { value: 'queued', label: 'Queued' },
   { value: 'in_review', label: 'In Review' },
-  { value: 'listened', label: 'Listened' },
-  { value: 'chosen', label: 'Chosen' },
-  { value: 'passed', label: 'Passed' },
+  { value: 'accepted', label: 'Accepted' },
+  { value: 'rejected', label: 'Rejected' },
 ]
 
 export function Dashboard() {
@@ -24,30 +23,33 @@ export function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [search, setSearch] = useState('')
 
+  const curatorMode = isCuratorApp()
+
   useEffect(() => {
-    if (!user?.isArtist) {
+    if (!curatorMode && !user?.isArtist) {
       navigate('/')
       return
     }
-  }, [user, navigate])
+  }, [curatorMode, user, navigate])
 
   useEffect(() => {
-    if (!user?.isArtist) return
+    if (!curatorMode && !user?.isArtist) return
     setLoading(true)
     api.getAllSubmissions({ status: statusFilter, search: search.trim() || undefined })
       .then((res) => setSubmissions(res.submissions))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
-  }, [user, statusFilter, search])
+  }, [curatorMode, user, statusFilter, search])
 
   const stats = useMemo(() => {
     const all = submissions.length
-    const queued = submissions.filter((s) => s.status === 'queued').length
-    const chosen = submissions.filter((s) => s.status === 'chosen').length
-    return { all, queued, chosen }
+    const inReview = submissions.filter((s) => s.status === 'in_review').length
+    const accepted = submissions.filter((s) => s.status === 'accepted').length
+    const rejected = submissions.filter((s) => s.status === 'rejected').length
+    return { all, inReview, accepted, rejected }
   }, [submissions])
 
-  if (!user?.isArtist) return null
+  if (!curatorMode && !user?.isArtist) return null
 
   const handleStatusChange = async (id: number, newStatus: SubmissionStatus) => {
     try {
@@ -71,12 +73,16 @@ export function Dashboard() {
             <div className={styles.statLabel}>Total</div>
           </div>
           <div className={styles.stat}>
-            <div className={styles.statNum}>{stats.queued}</div>
-            <div className={styles.statLabel}>Queued</div>
+            <div className={styles.statNum}>{stats.inReview}</div>
+            <div className={styles.statLabel}>In Review</div>
           </div>
           <div className={styles.stat}>
-            <div className={styles.statNum}>{stats.chosen}</div>
-            <div className={styles.statLabel}>Chosen</div>
+            <div className={styles.statNum}>{stats.accepted}</div>
+            <div className={styles.statLabel}>Accepted</div>
+          </div>
+          <div className={styles.stat}>
+            <div className={styles.statNum}>{stats.rejected}</div>
+            <div className={styles.statLabel}>Rejected</div>
           </div>
         </div>
       </div>
@@ -141,13 +147,6 @@ export function Dashboard() {
                 <Link to={`/submission/${sub.id}`} className={styles.trackLink}>
                   {sub.trackTitle}
                 </Link>
-                {sub.moods ? (
-                  <div className={styles.trackMoods}>
-                    {sub.moods.split(',').filter(Boolean).map((m) => (
-                      <span key={m} className={styles.moodTag}>{m.trim()}</span>
-                    ))}
-                  </div>
-                ) : null}
               </div>
               <div className={styles.colArtist}>
                 <div className={styles.artistName}>{sub.artistName}</div>
@@ -166,11 +165,9 @@ export function Dashboard() {
                   onChange={(e) => handleStatusChange(sub.id, e.target.value as SubmissionStatus)}
                   className={styles.statusSelect}
                 >
-                  <option value="queued">Queued</option>
                   <option value="in_review">In Review</option>
-                  <option value="listened">Listened</option>
-                  <option value="chosen">Chosen</option>
-                  <option value="passed">Passed</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Rejected</option>
                 </select>
               </div>
             </div>

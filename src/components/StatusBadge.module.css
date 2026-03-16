@@ -10,31 +10,19 @@
   border: 1px solid;
 }
 
-.queued {
-  color: var(--muted);
-  background: rgba(136,128,128,0.08);
-  border-color: rgba(136,128,128,0.25);
-}
-
 .inReview {
   color: var(--purple-light);
   background: var(--purple-dim);
   border-color: rgba(124,92,191,0.35);
 }
 
-.listened {
-  color: var(--yellow);
-  background: var(--yellow-dim);
-  border-color: rgba(224,192,80,0.3);
-}
-
-.chosen {
+.accepted {
   color: var(--green);
   background: var(--green-dim);
   border-color: var(--green-border);
 }
 
-.passed {
+.rejected {
   color: var(--red);
   background: rgba(208,96,96,0.08);
   border-color: rgba(208,96,96,0.25);

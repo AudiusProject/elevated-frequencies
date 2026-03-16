@@ -5,22 +5,11 @@ import {
   type Submission,
   type SubmissionStatus,
 } from "@/lib/store";
-import { api } from "@/lib/api";
-import { getAudiusSdk } from "@/lib/audius";
+import { isCuratorApp } from "@/lib/curator";
+import { api, type Comment } from "@/lib/api";
 import { StatusBadge } from "@/components/StatusBadge";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import styles from "./TrackDetail.module.css";
-import { HashId, Id } from "@audius/sdk";
-
-interface Comment {
-  id: string;
-  body: string;
-  userId: string;
-  userName: string;
-  userHandle: string;
-  createdAt: string;
-  replies?: Comment[];
-}
 
 export function TrackDetail() {
   const { id } = useParams();
@@ -32,6 +21,18 @@ export function TrackDetail() {
   const [postingComment, setPostingComment] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const loadComments = useCallback(
+    async (submissionId: number) => {
+      try {
+        const res = await api.getComments(submissionId);
+        setComments(res.comments);
+      } catch (err) {
+        console.warn("Could not load comments:", err);
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -39,62 +40,25 @@ export function TrackDetail() {
       .getSubmission(Number(id))
       .then((res) => {
         setSubmission(res.submission);
-        return loadComments(res.submission.trackId);
+        return loadComments(res.submission.id);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, loadComments]);
 
-  const loadComments = useCallback(async (trackId: string) => {
-    if (!trackId) return;
-    try {
-      const audiusSdk = getAudiusSdk();
-      const res = await audiusSdk.tracks.getTrackComments({ trackId });
-      const data = (res as any)?.data ?? [];
-      setComments(
-        data.map((c: any) => ({
-          id: c.id,
-          body: c.body ?? c.message ?? "",
-          userId: c.userId ?? c.user_id ?? "",
-          userName: c.user?.name ?? "Unknown",
-          userHandle: c.user?.handle ?? "",
-          createdAt: c.createdAt ?? c.created_at ?? "",
-          replies: (c.replies ?? []).map((r: any) => ({
-            id: r.id,
-            body: r.body ?? r.message ?? "",
-            userId: r.userId ?? r.user_id ?? "",
-            userName: r.user?.name ?? "Unknown",
-            userHandle: r.user?.handle ?? "",
-            createdAt: r.createdAt ?? r.created_at ?? "",
-          })),
-        })),
-      );
-    } catch (err) {
-      console.warn("Could not load comments:", err);
-    }
-  }, []);
+  const curatorMode = isCuratorApp();
 
   const handlePostComment = async () => {
-    if (!commentText.trim() || !submission?.trackId || !user) return;
+    if (!commentText.trim() || !submission) return;
+    if (!curatorMode && !user) return;
     setPostingComment(true);
     try {
-      const audiusSdk = getAudiusSdk();
-      const trackRes = await audiusSdk.tracks.getTrack({
-        trackId: submission.trackId,
-      });
-      const entityId = (trackRes as any)?.data?.track_id;
-      console.log("entityId", entityId, trackRes.data, submission.trackId);
-      await audiusSdk.comments.createComment({
-        userId: user.id,
-        metadata: {
-          entityType: "Track",
-          entityId: HashId.parse(submission.trackId),
-          body: commentText.trim(),
-        },
-      });
+      await api.postComment(submission.id, commentText.trim(), curatorMode
+        ? { curatorName: "Curator" }
+        : { userHandle: user!.handle, userName: user!.name });
       setCommentText("");
-      await loadComments(submission.trackId);
-    } catch (err: any) {
+      await loadComments(submission.id);
+    } catch (err: unknown) {
       console.error("Comment error:", err);
     } finally {
       setPostingComment(false);
@@ -102,11 +66,12 @@ export function TrackDetail() {
   };
 
   const handleStatusChange = async (newStatus: SubmissionStatus) => {
-    if (!submission || !user?.isArtist) return;
+    if (!submission) return;
+    if (!curatorMode && !user?.isArtist) return;
     try {
       const res = await api.updateSubmissionStatus(submission.id, newStatus);
       setSubmission(res.submission);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Status update failed:", err);
     }
   };
@@ -121,7 +86,7 @@ export function TrackDetail() {
     );
   }
 
-  if (error || !submission) {
+  if (error ?? !submission) {
     return (
       <section className={styles.page}>
         <div className={styles.error}>{error ?? "Submission not found"}</div>
@@ -132,19 +97,16 @@ export function TrackDetail() {
     );
   }
 
-  const moods = submission.moods?.split(",").filter(Boolean) ?? [];
-
   return (
     <section className={styles.page}>
       <Link
-        to={user?.isArtist ? "/dashboard" : "/my-submissions"}
+        to="/"
         className={styles.backLink}
       >
         &larr; Back
       </Link>
 
       <div className={styles.layout}>
-        {/* Main content */}
         <div className={styles.main}>
           <div className={styles.titleRow}>
             <div>
@@ -168,7 +130,6 @@ export function TrackDetail() {
             }}
           />
 
-          {/* Metadata grid */}
           <div className={styles.metaGrid}>
             {submission.genre ? (
               <div className={styles.metaItem}>
@@ -208,24 +169,13 @@ export function TrackDetail() {
             </div>
           </div>
 
-          {moods.length > 0 ? (
-            <div className={styles.moodsRow}>
-              {moods.map((m) => (
-                <span key={m} className={styles.moodTag}>
-                  {m.trim()}
-                </span>
-              ))}
-            </div>
-          ) : null}
-
           {submission.description ? (
             <div className={styles.descBlock}>
-              <div className={styles.descLabel}>Artist's Message</div>
+              <div className={styles.descLabel}>Artist&apos;s Message</div>
               <p>{submission.description}</p>
             </div>
           ) : null}
 
-          {/* Social links */}
           {submission.instagram ||
           submission.tiktok ||
           submission.spotifyUrl ? (
@@ -263,19 +213,12 @@ export function TrackDetail() {
             </div>
           ) : null}
 
-          {/* Artist controls */}
-          {user?.isArtist ? (
+          {(curatorMode || user?.isArtist) ? (
             <div className={styles.artistControls}>
               <div className={styles.controlLabel}>Update Status</div>
               <div className={styles.statusButtons}>
                 {(
-                  [
-                    "queued",
-                    "in_review",
-                    "listened",
-                    "chosen",
-                    "passed",
-                  ] as SubmissionStatus[]
+                  ["in_review", "accepted", "rejected"] as SubmissionStatus[]
                 ).map((s) => (
                   <button
                     key={s}
@@ -290,7 +233,6 @@ export function TrackDetail() {
           ) : null}
         </div>
 
-        {/* Comments sidebar */}
         <div className={styles.commentsSidebar}>
           <div className={styles.commentsHeader}>
             <span>Comments</span>
@@ -309,8 +251,10 @@ export function TrackDetail() {
               comments.map((c) => (
                 <div key={c.id} className={styles.comment}>
                   <div className={styles.commentMeta}>
-                    <strong>{c.userName}</strong>
-                    <span>@{c.userHandle}</span>
+                    <strong>{c.userName || c.userHandle || "User"}</strong>
+                    {c.userHandle ? (
+                      <span>@{c.userHandle}</span>
+                    ) : null}
                   </div>
                   <div className={styles.commentBody}>{c.body}</div>
                   {c.createdAt ? (
@@ -318,27 +262,18 @@ export function TrackDetail() {
                       {new Date(c.createdAt).toLocaleDateString()}
                     </div>
                   ) : null}
-                  {c.replies?.map((r) => (
-                    <div key={r.id} className={styles.reply}>
-                      <div className={styles.commentMeta}>
-                        <strong>{r.userName}</strong>
-                        <span>@{r.userHandle}</span>
-                      </div>
-                      <div className={styles.commentBody}>{r.body}</div>
-                    </div>
-                  ))}
                 </div>
               ))
             )}
           </div>
 
-          {user ? (
+          {(curatorMode || user) ? (
             <div className={styles.commentForm}>
               <textarea
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
                 placeholder={
-                  user.isArtist ? "Leave feedback..." : "Reply to Olivia..."
+                  curatorMode || user?.isArtist ? "Leave feedback..." : "Reply to Olivia..."
                 }
                 maxLength={500}
               />

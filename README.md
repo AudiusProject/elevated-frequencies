@@ -21,13 +21,15 @@ A web application for artists to submit tracks for consideration on the Elevated
 
 ## Tech Stack
 
-- **Frontend:** React 19 + TypeScript + Vite
-- **Backend:** Express + better-sqlite3
+- **Frontend:** React 19 + TypeScript (strict) + Vite
+- **Backend:** Express (API) + **Supabase** (PostgreSQL)
 - **Auth:** Audius OAuth (PKCE with write scope)
 - **Upload:** Audius SDK (`tracks.uploadTrack`)
 - **Comments:** Audius SDK (`comments.postComment`)
 - **State:** Zustand with persist
-- **Styling:** CSS Modules with Elevated Frequencies design system
+- **Styling:** Tailwind CSS v4, CSS Modules, Elevated Frequencies design system
+- **Lint/Test:** ESLint 9 (flat config), Vitest
+- **Deploy:** **Vercel** (same as [Crate](https://github.com/your-org/crate))
 
 ### Unlisted tracks
 
@@ -40,20 +42,21 @@ Submitted tracks are uploaded as **unlisted** on Audius. The API allows fetching
 - Node.js 18+
 - An Audius developer app (get API key at [api.audius.co/plans](https://api.audius.co/plans))
 
-### 2. Configure Environment
+### 2. Supabase & Environment
+
+1. Create a [Supabase](https://supabase.com) project and run **`lib/supabase/schema.sql`** in the SQL Editor.
+2. Copy env and fill in Audius + Supabase credentials:
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your credentials:
+The **curator** and **submitter** experiences are separate. Two options:
 
-```
-VITE_AUDIUS_API_KEY=your_api_key
-VITE_AUDIUS_API_SECRET=your_api_secret
-VITE_ARTIST_USER_ID=olivias_audius_user_id
-PORT=3001
-```
+- **Curator subdomain (no login):** Set `VITE_CURATOR_SUBDOMAIN=curator`, and the same secret in `VITE_CURATOR_KEY` and `CURATOR_KEY`. Open **https://curator.yourdomain.com** (or **http://curator.localhost:3000** locally — add `127.0.0.1 curator.localhost` to `/etc/hosts`). The curator sees the dashboard with no sign-in; the shared key authenticates API requests.
+- **Main site:** Submitters use the main URL and sign in with Audius. Optionally set `VITE_ARTIST_USER_ID` so that one Audius user can also open the dashboard from the main site after signing in.
+
+See **SETUP.md** for full Supabase and Vercel deploy steps.
 
 ### 3. Install & Run
 
@@ -68,6 +71,15 @@ This starts both the Vite dev server (port 3000) and the Express API (port 3001)
 
 ```bash
 npm run build
+npm run start   # serve built app
+```
+
+### 5. Lint & Test
+
+```bash
+npm run lint    # ESLint
+npm test        # Vitest
+npm run verify  # typecheck + lint + test
 ```
 
 ## Architecture
@@ -79,9 +91,10 @@ npm run build
 │   ├── hooks/              # useAudiusOAuth
 │   ├── lib/                # SDK setup, API client, Zustand store
 │   └── styles/             # Global CSS theme
-├── server/                 # Express backend
-│   ├── index.ts            # API routes
-│   └── db.ts               # SQLite schema
+├── server/                 # Express API (uses Supabase)
+│   └── index.ts            # API routes
+├── lib/supabase/           # Supabase client + schema + types
+├── api/                    # Vercel serverless (forwards to Express)
 └── index.html              # Vite entry
 ```
 
@@ -89,8 +102,10 @@ npm run build
 
 1. User authenticates via Audius OAuth (write scope)
 2. User selects an audio file and fills in submission metadata
-3. Track is uploaded privately to Audius via the SDK
-4. Submission record is saved to the local SQLite database
+3. Track is uploaded as unlisted to Audius via the SDK
+4. Submission record is saved to **Supabase** (PostgreSQL)
 5. The curator (identified by `VITE_ARTIST_USER_ID`) can view all submissions
 6. Curator updates status and communicates via Audius track comments
-7. Submitters see real-time status updates on their dashboard
+7. Submitters see status updates on their dashboard
+
+For **deployment on Vercel**, see **SETUP.md**.

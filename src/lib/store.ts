@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-export type SubmissionStatus = 'queued' | 'in_review' | 'listened' | 'chosen' | 'passed'
+export type SubmissionStatus = 'in_review' | 'accepted' | 'rejected'
 
 export interface AudiusUser {
   id: string
@@ -20,7 +20,6 @@ export interface Submission {
   artistName: string
   genre: string
   bpm: string
-  moods: string
   description: string
   releaseStatus: string
   location: string

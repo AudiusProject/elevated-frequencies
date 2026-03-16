@@ -53,7 +53,9 @@ cp .env.example .env
 
 The **curator** and **submitter** experiences are separate. Two options:
 
-- **Curator subdomain (no login):** Set `VITE_CURATOR_SUBDOMAIN=curator`, and the same secret in `VITE_CURATOR_KEY` and `CURATOR_KEY`. Open **https://curator.yourdomain.com** (or **http://curator.localhost:3000** locally — add `127.0.0.1 curator.localhost` to `/etc/hosts`). The curator sees the dashboard with no sign-in; the shared key authenticates API requests.
+- **Curator (no login):** Same secret in `VITE_CURATOR_KEY` and `CURATOR_KEY`. Then either:
+  - **Path (e.g. Vercel default domain):** Open **https://elevated-frequencies.vercel.app/curator** — no subdomain or DNS needed.
+  - **Subdomain:** Set `VITE_CURATOR_SUBDOMAIN=curator` and open **https://curator.yourdomain.com** (or **http://curator.localhost:3000** locally — add `127.0.0.1 curator.localhost` to `/etc/hosts`). The curator sees the dashboard with no sign-in; the shared key authenticates API requests.
 - **Main site:** Submitters use the main URL and sign in with Audius. Optionally set `VITE_ARTIST_USER_ID` so that one Audius user can also open the dashboard from the main site after signing in.
 
 See **SETUP.md** for full Supabase and Vercel deploy steps.
@@ -67,6 +69,7 @@ npm run dev
 
 This starts both the Vite dev server (port 3000) and the Express API (port 3001).
 
+open https://node1.oap.devnet/
 ### 4. Build for Production
 
 ```bash

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { getCuratorBasename } from '@/lib/curator'
 import { Dashboard } from '@/pages/Dashboard'
 import { TrackDetail } from '@/pages/TrackDetail'
 import { Logo } from '@/components/Logo'
@@ -6,6 +7,8 @@ import { NowPlayingBar } from '@/components/NowPlayingBar'
 
 function getMainSiteUrl(): string {
   if (typeof window === 'undefined') return '/'
+  const basename = getCuratorBasename()
+  if (basename) return `${window.location.origin}/`
   const host = window.location.hostname
   const subdomain = (import.meta.env.VITE_CURATOR_SUBDOMAIN ?? 'curator').trim().toLowerCase()
   const mainHost =
@@ -18,8 +21,9 @@ function getMainSiteUrl(): string {
 }
 
 export function CuratorApp() {
+  const basename = getCuratorBasename()
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename || undefined}>
       <header
         style={{
           display: 'flex',

@@ -19,11 +19,11 @@ app.use(express.json());
 function getAuthUser(req: express.Request): { userId: string } | null {
   const auth = req.headers.authorization;
   if (!auth?.startsWith("Bearer ")) return null;
-  const parts = auth.slice(7).split(":");
-  if (parts.length === 2) {
-    return { userId: parts[0] };
-  }
-  return null;
+  const payload = auth.slice(7).trim();
+  const colonIndex = payload.indexOf(":");
+  if (colonIndex === -1) return null;
+  const userId = payload.slice(0, colonIndex).trim();
+  return userId ? { userId } : null;
 }
 
 function isCuratorRequest(req: express.Request): boolean {

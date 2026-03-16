@@ -36,13 +36,20 @@ export function TrackDetail() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
+    setError(null);
+    setSubmission(null);
     api
       .getSubmission(Number(id))
       .then((res) => {
-        setSubmission(res.submission);
-        return loadComments(res.submission.id);
+        const sub = res?.submission ?? null;
+        if (!sub) {
+          setError("Submission not found");
+          return;
+        }
+        setSubmission(sub);
+        return loadComments(sub.id);
       })
-      .catch((err) => setError(err.message))
+      .catch((err) => setError(err?.message ?? "Failed to load"))
       .finally(() => setLoading(false));
   }, [id, loadComments]);
 
@@ -93,6 +100,17 @@ export function TrackDetail() {
         <Link to="/" className="btn-secondary" style={{ marginTop: 16 }}>
           Back to Home
         </Link>
+      </section>
+    );
+  }
+
+  // Defensive: avoid rendering main content if submission is null (e.g. prod race)
+  if (!submission) {
+    return (
+      <section className={styles.page}>
+        <div className={styles.loading}>
+          <span className="spin" /> Loading...
+        </div>
       </section>
     );
   }

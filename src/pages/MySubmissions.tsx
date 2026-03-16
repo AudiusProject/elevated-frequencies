@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuthStore, type Submission } from '@/lib/store'
 import { useAudiusOAuth } from '@/hooks/useAudiusOAuth'
 import { api } from '@/lib/api'
@@ -9,20 +9,21 @@ import styles from './MySubmissions.module.css'
 
 export function MySubmissions() {
   const user = useAuthStore((s) => s.user)
+  const accessToken = useAuthStore((s) => s.accessToken)
   const { login, loading: authLoading } = useAudiusOAuth()
-  const navigate = useNavigate()
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user) return
+    if (!user || !accessToken) return
     setLoading(true)
+    setError(null)
     api.getMySubmissions()
-      .then((res) => setSubmissions(res.submissions))
-      .catch((err) => setError(err.message))
+      .then((res) => setSubmissions(res.submissions ?? []))
+      .catch((err) => setError(err?.message ?? "Failed to load submissions"))
       .finally(() => setLoading(false))
-  }, [user])
+  }, [user, accessToken])
 
   if (!user) {
     return (

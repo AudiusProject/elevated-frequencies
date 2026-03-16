@@ -28,6 +28,7 @@ export interface CreateSubmissionPayload {
   trackId: string
   trackTitle: string
   artistName: string
+  audiusHandle: string
   genre: string
   bpm: string
   description: string

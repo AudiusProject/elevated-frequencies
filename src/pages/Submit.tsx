@@ -32,21 +32,13 @@ export function Submit() {
 
   const [form, setForm] = useState({
     trackTitle: '',
-    artistName: user?.name ?? '',
     genre: '',
     bpm: '',
     description: '',
     releaseStatus: '',
-    location: '',
-    instagram: '',
-    tiktok: '',
-    spotifyUrl: '',
   })
 
-  const [checks, setChecks] = useState({
-    original: false,
-    liveOnAudius: false,
-  })
+  const [checks, setChecks] = useState({ original: false })
 
   if (!user) {
     return (
@@ -98,16 +90,12 @@ export function Submit() {
       setError('Please select an audio file')
       return
     }
-    if (!coverArt) {
-      setError('Cover art is required by Audius. Please add an image.')
-      return
-    }
     if (!form.trackTitle || !form.genre) {
       setError('Track title and genre are required')
       return
     }
-    if (!checks.original || !checks.liveOnAudius) {
-      setError('Please confirm both checkboxes')
+    if (!checks.original) {
+      setError('Please confirm the rights checkbox')
       return
     }
 
@@ -122,24 +110,23 @@ export function Submit() {
         '',
         '---',
         `Submitted to Elevated Frequencies by @${user.handle}`,
-        form.location ? `Location: ${form.location}` : '',
-        form.instagram ? `Instagram: @${form.instagram}` : '',
-        form.tiktok ? `TikTok: @${form.tiktok}` : '',
-        form.spotifyUrl ? `Spotify: ${form.spotifyUrl}` : '',
         form.bpm ? `BPM: ${form.bpm}` : '',
         form.releaseStatus ? `Release Status: ${form.releaseStatus}` : '',
       ].filter(Boolean).join('\n')
 
       setUploadProgress(5)
 
-      const imageUpload = audiusSdk.uploads.createImageUpload({
-        file: coverArt!,
-        onProgress: ({ loaded, total }) => {
-          const pct = total > 0 ? (loaded / total) * 15 : 0
-          setUploadProgress(Math.round(5 + pct))
-        },
-      })
-      const coverArtCid = await imageUpload.start()
+      let coverArtCid: string | undefined
+      if (coverArt) {
+        const imageUpload = audiusSdk.uploads.createImageUpload({
+          file: coverArt,
+          onProgress: ({ loaded, total }) => {
+            const pct = total > 0 ? (loaded / total) * 15 : 0
+            setUploadProgress(Math.round(5 + pct))
+          },
+        })
+        coverArtCid = await imageUpload.start()
+      }
 
       setUploadProgress(20)
 
@@ -169,7 +156,7 @@ export function Submit() {
           origFilename: audioResult.origFilename,
           duration: audioResult.duration,
           previewCid: audioResult.previewCid ?? undefined,
-          coverArtSizes: coverArtCid,
+          ...(coverArtCid ? { coverArtSizes: coverArtCid } : {}),
         },
       })
 
@@ -180,23 +167,21 @@ export function Submit() {
       const payload: CreateSubmissionPayload = {
         trackId: String(trackId),
         trackTitle: form.trackTitle,
-        artistName: form.artistName || user.name,
+        artistName: user.name,
+        audiusHandle: user.handle,
         genre: form.genre,
         bpm: form.bpm,
         description: form.description,
         releaseStatus: form.releaseStatus,
-        location: form.location,
-        instagram: form.instagram,
-        tiktok: form.tiktok,
-        spotifyUrl: form.spotifyUrl,
+        location: '',
+        instagram: '',
+        tiktok: '',
+        spotifyUrl: '',
       }
 
-      await api.createSubmission({
-        ...payload,
-        audiusHandle: user.handle,
-      })
+      await api.createSubmission(payload)
 
-      setSuccess({ trackTitle: form.trackTitle, artistName: form.artistName || user.name })
+      setSuccess({ trackTitle: form.trackTitle, artistName: user.name })
     } catch (err: any) {
       console.error('Submit error:', err)
       setError(err.message ?? 'Failed to upload and submit track')
@@ -230,8 +215,8 @@ export function Submit() {
               setFile(null)
               setCoverArt(null)
               setCoverArtPreview(null)
-              setForm({ trackTitle: '', artistName: user?.name ?? '', genre: '', bpm: '', description: '', releaseStatus: '', location: '', instagram: '', tiktok: '', spotifyUrl: '' })
-              setChecks({ original: false, liveOnAudius: false })
+              setForm({ trackTitle: '', genre: '', bpm: '', description: '', releaseStatus: '' })
+              setChecks({ original: false })
               setCharCount(0)
             }}>
               Submit Another Track
@@ -298,11 +283,10 @@ export function Submit() {
           </div>
 
           <div className="field-group">
-            <label>Cover Art <span className="req">*</span></label>
+            <label>Cover Art <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 400 }}>(optional)</span></label>
             <div
               className={styles.dropZone}
               onClick={() => artRef.current?.click()}
-              style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 24px' }}
             >
               <input
                 ref={artRef}
@@ -313,7 +297,7 @@ export function Submit() {
               />
               {coverArtPreview ? (
                 <div className={styles.filePreview}>
-                  <img src={coverArtPreview} alt="Cover art" style={{ width: 64, height: 64, objectFit: 'cover', flexShrink: 0 }} />
+                  <img src={coverArtPreview} alt="Cover art" style={{ width: 48, height: 48, objectFit: 'cover', flexShrink: 0, borderRadius: 2 }} />
                   <div>
                     <strong>{coverArt?.name}</strong>
                     <span>Click to change</span>
@@ -321,78 +305,11 @@ export function Submit() {
                 </div>
               ) : (
                 <div className={styles.dropPrompt}>
-                  <span style={{ fontSize: 18 }}>&#128247;</span>
+                  <span style={{ fontSize: 24 }}>&#128247;</span>
                   Click to add cover art (JPG, PNG)
                 </div>
               )}
             </div>
-          </div>
-
-          <hr className="fdiv" />
-          <div className="fsec">Artist Information</div>
-
-          <div className="field-row">
-            <div className="field-group" style={{ margin: 0 }}>
-              <label>Artist Name <span className="req">*</span></label>
-              <input
-                type="text"
-                value={form.artistName}
-                onChange={(e) => setForm((f) => ({ ...f, artistName: e.target.value }))}
-                placeholder="Your artist alias"
-                required
-              />
-            </div>
-            <div className="field-group" style={{ margin: 0 }}>
-              <label>City / Location</label>
-              <input
-                type="text"
-                value={form.location}
-                onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-                placeholder="Chicago, IL"
-              />
-            </div>
-          </div>
-
-          <div className="field-row">
-            <div className="field-group" style={{ margin: 0 }}>
-              <label>Instagram</label>
-              <div className="icon-input">
-                <span className="iico">@</span>
-                <input
-                  type="text"
-                  value={form.instagram}
-                  onChange={(e) => setForm((f) => ({ ...f, instagram: e.target.value }))}
-                  placeholder="yourhandle"
-                />
-              </div>
-            </div>
-            <div className="field-group" style={{ margin: 0 }}>
-              <label>TikTok</label>
-              <div className="icon-input">
-                <span className="iico">@</span>
-                <input
-                  type="text"
-                  value={form.tiktok}
-                  onChange={(e) => setForm((f) => ({ ...f, tiktok: e.target.value }))}
-                  placeholder="yourhandle"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="field-group">
-            <label>
-              Spotify Artist URL{' '}
-              <span style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0, fontFamily: 'var(--font)', fontWeight: 300 }}>
-                &nbsp;profile only, not for submission
-              </span>
-            </label>
-            <input
-              type="url"
-              value={form.spotifyUrl}
-              onChange={(e) => setForm((f) => ({ ...f, spotifyUrl: e.target.value }))}
-              placeholder="open.spotify.com/artist/..."
-            />
           </div>
 
           <hr className="fdiv" />
@@ -441,8 +358,7 @@ export function Submit() {
               onChange={(e) => setForm((f) => ({ ...f, releaseStatus: e.target.value }))}
               required
             >
-              <option value="" disabled>Is this track released?</option>
-              <option value="released">Released on Audius</option>
+              <option value="" disabled>Release status</option>
               <option value="unreleased">Unreleased</option>
               <option value="signed">Signed / Label Release</option>
             </select>
@@ -474,14 +390,6 @@ export function Submit() {
             </p>
           </label>
 
-          <label className="rights-block" onClick={() => setChecks((c) => ({ ...c, liveOnAudius: !c.liveOnAudius }))}>
-            <input type="checkbox" checked={checks.liveOnAudius} onChange={() => {}} />
-            <p>
-              <strong>I understand my track will be uploaded privately to Audius</strong> via the
-              Open Audio Protocol. The track remains my property and I can manage it from my Audius account.
-            </p>
-          </label>
-
           {error ? (
             <div className={styles.error}>{error}</div>
           ) : null}
@@ -489,7 +397,7 @@ export function Submit() {
           <button
             type="submit"
             className="btn-primary"
-            disabled={uploading || !checks.original || !checks.liveOnAudius}
+            disabled={uploading || !checks.original}
           >
             {uploading ? (
               <>

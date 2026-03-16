@@ -1,0 +1,116 @@
+.bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--off-black);
+  border-top: 1px solid var(--border);
+  z-index: 800;
+  animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.progressWrap {
+  cursor: pointer;
+  padding: 0;
+  height: 3px;
+  position: relative;
+}
+.progressWrap:hover { height: 5px; }
+
+.progressTrack {
+  height: 100%;
+  background: var(--border);
+  position: relative;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), var(--purple-light));
+  transition: width 0.15s linear;
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 24px;
+}
+
+.playBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--purple);
+  border: none;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.playBtn:hover { background: var(--purple-light); }
+.playBtn:disabled { background: var(--border); cursor: wait; }
+
+.trackInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.trackTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trackArtist {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeDisplay {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sep { margin: 0 2px; color: var(--border-light); }
+
+.closeBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.closeBtn:hover { border-color: var(--red); color: var(--red); }
+
+@media (max-width: 560px) {
+  .content { padding: 8px 16px; gap: 10px; }
+  .timeDisplay { display: none; }
+}

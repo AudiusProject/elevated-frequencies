@@ -1,0 +1,126 @@
+.player {
+  background: var(--off-black);
+  border: 1px solid var(--border);
+  padding: 20px 24px 16px;
+  margin-bottom: 24px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.playBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--purple);
+  border: none;
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.1s;
+  flex-shrink: 0;
+}
+.playBtn:hover { background: var(--purple-light); transform: scale(1.05); }
+.playBtn:active { transform: scale(0.97); }
+.playBtn:disabled { background: var(--border); cursor: wait; }
+.playBtn.playing { background: var(--purple-light); }
+
+.timeInfo {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 90px;
+}
+.time { color: var(--white); }
+.sep { color: var(--border-light); }
+
+.volumeControl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.volumeSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 72px;
+  height: 3px;
+  background: var(--border);
+  outline: none;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.volumeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--purple-light);
+  cursor: pointer;
+  border: none;
+}
+.volumeSlider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--purple-light);
+  cursor: pointer;
+  border: none;
+}
+
+.progressWrap {
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.progressTrack {
+  position: relative;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: visible;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), var(--purple-light));
+  border-radius: 2px;
+  transition: width 0.15s linear;
+}
+
+.progressThumb {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  background: var(--white);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 6px rgba(124, 92, 191, 0.5);
+  transition: left 0.15s linear;
+}
+
+.error {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--red);
+  margin-top: 8px;
+  letter-spacing: 0.06em;
+}
+
+@media (max-width: 560px) {
+  .player { padding: 16px; }
+  .volumeControl { display: none; }
+}

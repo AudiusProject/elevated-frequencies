@@ -1,0 +1,176 @@
+.authPrompt {
+  padding: 120px 48px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.authPrompt h2 {
+  font-size: 36px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.authPrompt p {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 300;
+  max-width: 400px;
+  margin-bottom: 12px;
+}
+
+.mainLayout {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.formWrap {
+  padding: 56px 48px;
+  border-right: 1px solid var(--border);
+}
+
+.formTop { margin-bottom: 36px; }
+.formTop h2 { font-size: 28px; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; color: var(--white); margin-bottom: 6px; }
+.formTop p { font-size: 13px; color: var(--muted); font-weight: 300; }
+
+.connectedAs {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, rgba(93,224,160,0.06), rgba(93,224,160,0.02));
+  border: 1px solid var(--green-border);
+  margin-bottom: 36px;
+}
+.avatar {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--dark);
+  border: 2px solid var(--green); display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 700; color: var(--green); flex-shrink: 0; overflow: hidden;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.connectedAs strong { display: block; font-size: 13px; font-weight: 600; color: var(--white); }
+.connectedAs span { font-size: 11px; color: var(--muted); font-family: var(--mono); letter-spacing: 0.05em; }
+.connectedTag {
+  margin-left: auto;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+  color: var(--green); background: var(--green-dim);
+  border: 1px solid var(--green-border); padding: 4px 10px;
+  display: flex; align-items: center; gap: 5px;
+}
+
+/* Drop zone */
+.dropZone {
+  border: 2px dashed var(--border);
+  padding: 32px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.dropZone:hover {
+  border-color: var(--purple);
+  background: rgba(124,92,191,0.04);
+}
+
+.dropPrompt {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.dropPrompt span {
+  font-size: 24px;
+  color: var(--purple-light);
+}
+
+.filePreview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+}
+.fileIcon {
+  width: 48px; height: 48px; background: var(--purple-dim);
+  border: 1px solid rgba(124,92,191,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: var(--purple-light); flex-shrink: 0;
+}
+.filePreview strong { display: block; font-size: 13px; color: var(--white); font-weight: 600; }
+.filePreview span { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+
+.error {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--red);
+  padding: 12px 16px;
+  background: rgba(208,96,96,0.06);
+  border: 1px solid rgba(208,96,96,0.2);
+  margin-bottom: 16px;
+}
+
+/* Sidebar */
+.sidebar { padding: 48px 32px; display: flex; flex-direction: column; gap: 32px; }
+
+.scard { border: 1px solid var(--border); background: var(--panel); }
+.scardHead { padding: 16px 20px; border-bottom: 1px solid var(--border); font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+.scardBody { padding: 20px; }
+
+.hostRow { display: flex; align-items: center; gap: 14px; }
+.hostAvatar {
+  width: 48px; height: 48px; border-radius: 50%; background: var(--dark);
+  border: 2px solid var(--purple); display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 900; color: var(--purple-light); flex-shrink: 0;
+}
+.hostName { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 2px; }
+.hostRole { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.12em; }
+
+.criteria { list-style: none; display: flex; flex-direction: column; gap: 11px; }
+.criteria li { display: flex; gap: 10px; font-size: 12px; color: var(--muted); line-height: 1.5; font-weight: 300; }
+.criteria li::before { content: '→'; color: var(--purple-light); font-family: var(--mono); font-size: 11px; flex-shrink: 0; }
+
+.audiusScard { background: linear-gradient(135deg, rgba(139,111,212,0.12), rgba(30,30,30,0.6)); border: 1px solid rgba(139,111,212,0.35); }
+.audiusScard .scardHead { color: #8B6FD4; border-color: rgba(139,111,212,0.25); }
+.audiusScard p { font-size: 12px; color: var(--muted); line-height: 1.7; font-weight: 300; }
+
+/* Success */
+.successOverlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px;
+  min-height: 60vh;
+  border-bottom: 1px solid var(--border);
+}
+.successBox {
+  width: 90%; max-width: 460px;
+  background: var(--panel); border: 1px solid var(--border);
+  padding: 52px 44px; text-align: center;
+  animation: fadeup 0.35s ease;
+}
+.successCheck {
+  width: 60px; height: 60px; border-radius: 50%;
+  border: 2px solid var(--purple); background: var(--purple-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; margin: 0 auto 24px; color: var(--purple-light);
+}
+.successBox h2 { font-size: 32px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; }
+.successBox p { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 24px; font-weight: 300; }
+.successTrack {
+  font-family: var(--mono); font-size: 12px; color: var(--purple-light);
+  background: var(--purple-dim); border: 1px solid rgba(124,92,191,0.28);
+  padding: 10px 20px; margin-bottom: 28px; letter-spacing: 0.08em; display: inline-block;
+}
+
+@media(max-width:960px) {
+  .mainLayout { grid-template-columns: 1fr; }
+  .sidebar { border-left: none; border-top: 1px solid var(--border); }
+}
+@media(max-width:768px) {
+  .formWrap, .sidebar, .authPrompt { padding-left: 24px; padding-right: 24px; }
+}

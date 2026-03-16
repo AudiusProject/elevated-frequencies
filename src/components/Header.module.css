@@ -1,0 +1,99 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(17,17,17,0.96);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 48px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logoLockup {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+}
+
+.logoType { display: flex; flex-direction: column; line-height: 1.1; }
+.l1 { font-size: 13px; font-weight: 300; letter-spacing: 0.3em; color: var(--white); text-transform: uppercase; }
+.l2 { font-size: 17px; font-weight: 800; letter-spacing: 0.1em; color: var(--white); text-transform: uppercase; }
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.navLink {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 8px 14px;
+  transition: color 0.15s;
+}
+.navLink:hover { color: var(--purple-light); }
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.handle {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--purple-light);
+  letter-spacing: 0.06em;
+}
+
+.logoutBtn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.logoutBtn:hover { border-color: var(--white); color: var(--white); }
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+}
+
+.liveDot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--purple-light);
+  box-shadow: 0 0 8px var(--purple);
+  animation: pulsedot 2.2s ease-in-out infinite;
+}
+
+@media(max-width:768px) {
+  .header { padding: 0 24px; }
+  .nav { display: none; }
+}

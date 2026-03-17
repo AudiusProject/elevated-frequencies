@@ -16,6 +16,16 @@ const CURATOR_KEY = (process.env.CURATOR_KEY ?? "").trim();
 app.use(cors());
 app.use(express.json());
 
+// Vercel serverless may forward path without /api prefix; normalize so routes match
+app.use((req, _res, next) => {
+  const raw = req.url ?? "";
+  const [path, qs] = raw.split("?");
+  if (path && !path.startsWith("/api")) {
+    req.url = "/api" + (path.startsWith("/") ? path : "/" + path) + (qs ? `?${qs}` : "");
+  }
+  next();
+});
+
 function getAuthUser(req: express.Request): { userId: string } | null {
   const auth = req.headers.authorization;
   if (!auth?.startsWith("Bearer ")) return null;

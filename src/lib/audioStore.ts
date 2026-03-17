@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { getAudiusSdk } from './audius'
 
+const STREAM_LOAD_TIMEOUT_MS = 12_000
+
 export interface PlayingTrack {
   trackId: string
   title: string
@@ -36,6 +38,53 @@ function getOrCreateAudio(): HTMLAudioElement {
   return globalAudio
 }
 
+/** Try to load a single stream URL; resolve on canplay, reject on error or timeout. */
+function loadStreamUrl(audio: HTMLAudioElement, url: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      audio.removeEventListener('canplay', onCanPlay)
+      audio.removeEventListener('error', onError)
+      audio.pause()
+      audio.removeAttribute('src')
+      reject(new Error('Stream timeout'))
+    }, STREAM_LOAD_TIMEOUT_MS)
+
+    const onCanPlay = () => {
+      clearTimeout(timeoutId)
+      audio.removeEventListener('error', onError)
+      resolve()
+    }
+    const onError = () => {
+      clearTimeout(timeoutId)
+      audio.removeEventListener('canplay', onCanPlay)
+      audio.removeAttribute('src')
+      reject(new Error('Stream failed'))
+    }
+
+    audio.addEventListener('canplay', onCanPlay, { once: true })
+    audio.addEventListener('error', onError, { once: true })
+    audio.src = url
+    audio.load()
+  })
+}
+
+/** Build list of stream URLs: primary url first, then mirrors, deduped. */
+function getStreamUrls(trackData: { stream?: { url?: string; mirrors?: string[] } }): string[] {
+  const urls: string[] = []
+  const seen = new Set<string>()
+  const add = (u: string) => {
+    if (u && !seen.has(u)) {
+      seen.add(u)
+      urls.push(u)
+    }
+  }
+  if (trackData?.stream?.url) add(trackData.stream.url)
+  if (Array.isArray(trackData?.stream?.mirrors)) {
+    trackData.stream.mirrors.forEach(add)
+  }
+  return urls
+}
+
 export const useAudioStore = create<AudioState>()((set, get) => ({
   audio: null,
   currentTrack: null,
@@ -66,17 +115,27 @@ export const useAudioStore = create<AudioState>()((set, get) => ({
       const sdk = getAudiusSdk()
       const trackRes = await sdk.tracks.getTrack({ trackId: track.trackId })
       const trackData = (trackRes as { data?: { stream?: { url?: string; mirrors?: string[] } } })?.data
-      const streamUrl =
-        trackData?.stream?.url ??
-        (Array.isArray(trackData?.stream?.mirrors) && trackData.stream.mirrors.length > 0
-          ? trackData.stream.mirrors[0]
-          : null)
-      if (!streamUrl) {
-        throw new Error('No stream URL in track response')
+      const streamUrls = getStreamUrls(trackData ?? {})
+      if (streamUrls.length === 0) {
+        throw new Error('No stream URL or mirrors in track response')
       }
-      audio.src = streamUrl
-      audio.volume = get().volume
 
+      let lastErr: Error | null = null
+      for (const url of streamUrls) {
+        try {
+          await loadStreamUrl(audio, url)
+          lastErr = null
+          break
+        } catch (e) {
+          lastErr = e instanceof Error ? e : new Error(String(e))
+          continue
+        }
+      }
+      if (lastErr) {
+        throw lastErr
+      }
+
+      audio.volume = get().volume
       audio.onloadedmetadata = () => {
         set({ duration: audio.duration })
       }
@@ -89,15 +148,14 @@ export const useAudioStore = create<AudioState>()((set, get) => ({
       audio.onerror = () => {
         set({ error: 'Failed to load audio', isPlaying: false, isLoading: false })
       }
-      audio.oncanplay = () => {
-        set({ isLoading: false })
-      }
 
+      set({ audio, isLoading: false })
       await audio.play()
-      set({ audio, isPlaying: true, isLoading: false })
-    } catch (err: any) {
+      set({ isPlaying: true })
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Playback failed'
       console.error('Playback error:', err)
-      set({ error: err.message ?? 'Playback failed', isLoading: false, isPlaying: false })
+      set({ error: message, isLoading: false, isPlaying: false })
     }
   },
 

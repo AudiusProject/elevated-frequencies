@@ -19,11 +19,8 @@ export function Submit() {
   const { login, loading: authLoading } = useAudiusOAuth()
   const navigate = useNavigate()
   const fileRef = useRef<HTMLInputElement>(null)
-  const artRef = useRef<HTMLInputElement>(null)
 
   const [file, setFile] = useState<File | null>(null)
-  const [coverArt, setCoverArt] = useState<File | null>(null)
-  const [coverArtPreview, setCoverArtPreview] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [charCount, setCharCount] = useState(0)
@@ -69,19 +66,6 @@ export function Submit() {
     }
   }
 
-  const handleCoverArtChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]
-    if (f) {
-      if (!f.type.startsWith('image/')) {
-        setError('Please select an image file for cover art')
-        return
-      }
-      setCoverArt(f)
-      setCoverArtPreview(URL.createObjectURL(f))
-      setError(null)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -116,25 +100,11 @@ export function Submit() {
 
       setUploadProgress(5)
 
-      let coverArtCid: string | undefined
-      if (coverArt) {
-        const imageUpload = audiusSdk.uploads.createImageUpload({
-          file: coverArt,
-          onProgress: ({ loaded, total }) => {
-            const pct = total > 0 ? (loaded / total) * 15 : 0
-            setUploadProgress(Math.round(5 + pct))
-          },
-        })
-        coverArtCid = await imageUpload.start()
-      }
-
-      setUploadProgress(20)
-
       const audioUpload = audiusSdk.uploads.createAudioUpload({
         file: file!,
         onProgress: ({ loaded, total }) => {
-          const pct = total > 0 ? (loaded / total) * 60 : 0
-          setUploadProgress(Math.round(20 + pct))
+          const pct = total > 0 ? (loaded / total) * 80 : 0
+          setUploadProgress(Math.round(5 + pct))
         },
       })
       const audioResult = await audioUpload.start()
@@ -156,7 +126,6 @@ export function Submit() {
           origFilename: audioResult.origFilename,
           duration: audioResult.duration,
           previewCid: audioResult.previewCid ?? undefined,
-          ...(coverArtCid ? { coverArtSizes: coverArtCid } : {}),
         },
       })
 
@@ -213,8 +182,6 @@ export function Submit() {
             <button className="btn-secondary" onClick={() => {
               setSuccess(null)
               setFile(null)
-              setCoverArt(null)
-              setCoverArtPreview(null)
               setForm({ trackTitle: '', genre: '', bpm: '', description: '', releaseStatus: '' })
               setChecks({ original: false })
               setCharCount(0)
@@ -277,36 +244,6 @@ export function Submit() {
                 <div className={styles.dropPrompt}>
                   <span>&#8593;</span>
                   Click to select an audio file (MP3, WAV, FLAC, etc.)
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="field-group">
-            <label>Cover Art <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 400 }}>(optional)</span></label>
-            <div
-              className={styles.dropZone}
-              onClick={() => artRef.current?.click()}
-            >
-              <input
-                ref={artRef}
-                type="file"
-                accept="image/*"
-                onChange={handleCoverArtChange}
-                style={{ display: 'none' }}
-              />
-              {coverArtPreview ? (
-                <div className={styles.filePreview}>
-                  <img src={coverArtPreview} alt="Cover art" style={{ width: 48, height: 48, objectFit: 'cover', flexShrink: 0, borderRadius: 2 }} />
-                  <div>
-                    <strong>{coverArt?.name}</strong>
-                    <span>Click to change</span>
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.dropPrompt}>
-                  <span style={{ fontSize: 24 }}>&#128247;</span>
-                  Click to add cover art (JPG, PNG)
                 </div>
               )}
             </div>

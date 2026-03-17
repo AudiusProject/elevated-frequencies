@@ -16,12 +16,17 @@ const CURATOR_KEY = (process.env.CURATOR_KEY ?? "").trim();
 app.use(cors());
 app.use(express.json());
 
-// Vercel serverless may forward path without /api prefix; normalize so routes match
+// Vercel: rewrites send /api/* to /api/backend/*; strip /backend so routes match
 app.use((req, _res, next) => {
   const raw = req.url ?? "";
   const [path, qs] = raw.split("?");
+  const q = qs ? `?${qs}` : "";
+  if (path?.startsWith("/api/backend")) {
+    req.url = "/api" + path.slice(12) + q; // "/api/backend".length === 12
+    return next();
+  }
   if (path && !path.startsWith("/api")) {
-    req.url = "/api" + (path.startsWith("/") ? path : "/" + path) + (qs ? `?${qs}` : "");
+    req.url = "/api" + (path.startsWith("/") ? path : "/" + path) + q;
   }
   next();
 });

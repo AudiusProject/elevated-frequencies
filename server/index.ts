@@ -16,10 +16,19 @@ const CURATOR_KEY = (process.env.CURATOR_KEY ?? "").trim();
 app.use(cors());
 app.use(express.json());
 
-// Vercel: rewrites send /api/* to /api/backend/*; strip /backend so routes match
+// Vercel: rewrites send /api/* to /api/backend or /api/backend?__path=...; normalize so routes match
 app.use((req, _res, next) => {
   const raw = req.url ?? "";
   const [path, qs] = raw.split("?");
+  const params = qs ? new URLSearchParams(qs) : null;
+  const pathParam = params?.get("__path");
+  if (pathParam !== null && pathParam !== undefined) {
+    // Single serverless function: path passed as ?__path=submissions/5 (Vercel rewrite for all /api/*)
+    params?.delete("__path");
+    const rest = params?.toString();
+    req.url = "/api/" + pathParam.replace(/^\/+/, "") + (rest ? `?${rest}` : "");
+    return next();
+  }
   const q = qs ? `?${qs}` : "";
   if (path?.startsWith("/api/backend")) {
     req.url = "/api" + path.slice(12) + q; // "/api/backend".length === 12

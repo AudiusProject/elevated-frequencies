@@ -1,43 +1,58 @@
-import { sdk, StorageNodeSelector } from '@audius/sdk'
+import { sdk, type AudiusSdk } from '@audius/sdk'
 
-let audiusSdk: ReturnType<typeof createSdk> | null = null
+let audiusSdk: AudiusSdk | null = null
 
-function createSdk(apiKey: string, bearerToken: string, storageNodeSelector: InstanceType<typeof StorageNodeSelector>) {
-  return sdk({
-    apiKey,
-    bearerToken,
-    appName: 'elevated-frequencies-portal',
-    services: {
-      storageNodeSelector,
-    },
-  } as any)
+/**
+ * OAuth redirect URI registered on your Audius developer app.
+ * Default: `${origin}/` so you only register one URL (popup briefly loads `/` with ?code=).
+ * Override with VITE_AUDIUS_REDIRECT_URI for fixed production URLs.
+ */
+function getRedirectUri(): string {
+  const override = import.meta.env.VITE_AUDIUS_REDIRECT_URI?.trim()
+  if (override) {
+    return override
+  }
+  if (typeof window === 'undefined') {
+    return ''
+  }
+  return `${window.location.origin}/`
 }
 
-export function getAudiusSdk() {
+export function getAudiusSdk(): AudiusSdk {
   if (!audiusSdk) {
-    const apiKey = import.meta.env.VITE_AUDIUS_API_KEY
-    const bearerToken = import.meta.env.VITE_AUDIUS_BEARER_TOKEN
-    if (!apiKey || !bearerToken) {
-      throw new Error('VITE_AUDIUS_API_KEY and VITE_AUDIUS_BEARER_TOKEN must be set')
+    const apiKey = import.meta.env.VITE_AUDIUS_API_KEY?.trim()
+    if (!apiKey) {
+      throw new Error('VITE_AUDIUS_API_KEY must be set')
+    }
+    const bearerToken = import.meta.env.VITE_AUDIUS_BEARER_TOKEN?.trim()
+    // Always use production Audius (api.audius.co) unless explicitly targeting a local protocol stack.
+    // import.meta.env.DEV is true under Vite dev server — do not map that to SDK "development",
+    // which points at docker hostnames like http://audius-api.
+    const environment =
+      import.meta.env.VITE_AUDIUS_ENV === 'development'
+        ? 'development'
+        : 'production'
+    const redirectUri = getRedirectUri()
+    if (!redirectUri) {
+      throw new Error(
+        'Audius OAuth needs a redirect URI: open the app in a browser or set VITE_AUDIUS_REDIRECT_URI'
+      )
     }
 
-    const storageNodeSelector = new StorageNodeSelector({
-      endpoint: 'https://api.audius.co',
-      bootstrapNodes: [
-        {
-          endpoint: 'https://creatornode.audius.co',
-          delegateOwnerWallet: '0xc8d0C29B6d540295e8fc8ac72456F2f4D41088c8',
-        },
-        {
-          endpoint: 'https://creatornode2.audius.co',
-          delegateOwnerWallet: '0xf686647E3737d595C60c6DE2f5F90463542FE439',
-        },
-      ],
-    })
-
-    audiusSdk = createSdk(apiKey, bearerToken, storageNodeSelector)
+    audiusSdk = bearerToken
+      ? sdk({
+          apiKey,
+          bearerToken,
+          redirectUri,
+          environment,
+        })
+      : sdk({
+          apiKey,
+          redirectUri,
+          environment,
+        })
   }
   return audiusSdk
 }
 
-export type AudiusSdk = ReturnType<typeof createSdk>
+export type { AudiusSdk }

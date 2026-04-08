@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/lib/store'
 import { isCuratorApp } from '@/lib/curator'
+import { AudiusSessionSync } from '@/components/AudiusSessionSync'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { NowPlayingBar } from '@/components/NowPlayingBar'
@@ -22,18 +23,20 @@ export function App() {
 
   return (
     <BrowserRouter>
-      <Header />
-      <main>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/submit" element={<SubmitterOnly><Submit /></SubmitterOnly>} />
-          <Route path="/my-submissions" element={<SubmitterOnly><MySubmissions /></SubmitterOnly>} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/submission/:id" element={<TrackDetail />} />
-        </Routes>
-      </main>
-      <Footer />
-      <NowPlayingBar />
+      <AudiusSessionSync>
+        <Header />
+        <main>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/submit" element={<SubmitterOnly><Submit /></SubmitterOnly>} />
+            <Route path="/my-submissions" element={<SubmitterOnly><MySubmissions /></SubmitterOnly>} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/submission/:id" element={<TrackDetail />} />
+          </Routes>
+        </main>
+        <Footer />
+        <NowPlayingBar />
+      </AudiusSessionSync>
     </BrowserRouter>
   )
 }

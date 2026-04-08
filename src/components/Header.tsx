@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from './Logo'
+import { getAudiusSdk } from '@/lib/audius'
 import { useAuthStore } from '@/lib/store'
 import styles from './Header.module.css'
 
@@ -7,7 +8,13 @@ export function Header() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      const audiusSdk = getAudiusSdk()
+      await audiusSdk.oauth.logout()
+    } catch {
+      // Non-fatal if SDK or network fails; still clear local app state
+    }
     logout()
     navigate('/')
   }

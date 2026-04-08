@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react'
-import { useAuthStore } from '@/lib/store'
-import { getAudiusSdk } from '@/lib/audius'
 
-const ARTIST_USER_ID = (import.meta.env.VITE_ARTIST_USER_ID ?? '').trim()
+import { getAudiusSdk } from '@/lib/audius'
+import { mapSdkUserToAudiusUser } from '@/lib/mapAudiusUser'
+import { useAuthStore } from '@/lib/store'
 
 export function useAudiusOAuth() {
   const [loading, setLoading] = useState(false)
@@ -14,38 +14,22 @@ export function useAudiusOAuth() {
     setError(null)
     try {
       const audiusSdk = getAudiusSdk()
-      if (!audiusSdk.oauth) {
-        setError('OAuth not available (requires browser)')
-        setLoading(false)
-        return
-      }
-      audiusSdk.oauth.init({
-        successCallback: (profile: any, encodedJwt: string) => {
-          const userId = profile.userId ?? ''
-          const isArtist =
-            ARTIST_USER_ID !== '' && String(userId) === String(ARTIST_USER_ID)
-
-          setAuth(
-            {
-              id: String(userId),
-              handle: profile.handle ?? '',
-              name: profile.name ?? profile.handle ?? '',
-              profilePicture: profile.profilePicture?._150x150 ?? profile.profilePicture?._480x480 ?? undefined,
-              isArtist,
-            },
-            `${userId}:${encodedJwt}`
-          )
-          setLoading(false)
-        },
-        errorCallback: (errorMessage: string) => {
-          console.error('OAuth error:', errorMessage)
-          setError(errorMessage ?? 'Authentication failed')
-          setLoading(false)
-        },
+      await audiusSdk.oauth.login({
+        scope: 'write',
+        display: 'popup',
       })
-      audiusSdk.oauth.login({ scope: 'write' })
-    } catch (e: any) {
-      setError(e.message)
+      const profile = await audiusSdk.oauth.getUser()
+      const accessToken = await audiusSdk.tokenStore.getAccessToken()
+      setAuth(
+        mapSdkUserToAudiusUser(profile),
+        `${profile.id}:${accessToken ?? ''}`
+      )
+    } catch (e: unknown) {
+      const message =
+        e instanceof Error ? e.message : 'Authentication failed'
+      setError(message)
+      console.error('OAuth error:', e)
+    } finally {
       setLoading(false)
     }
   }, [setAuth])
